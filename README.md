@@ -62,8 +62,32 @@ urgency" (within-one-band rate is 94% on defects, 97% on features).
 
 ## Requirements
 
-Ollaya server running with `von` loaded (`ollaya run von`), listening on
-`http://localhost:11435`.
+- Python 3.8+ (standard library only — no pip packages)
+- Ollaya server 0.9.0+ running with `von` loaded (`ollaya run von`), listening on
+  `http://localhost:11435`
+- The `von` model: ModernBERT-large, ONNX, 395M parameters (F32), 1.48 GiB
+- ~2–3 GB free RAM while the model is resident; ordinary multi-core CPU, no GPU
+  (24 probes take about 3–4 seconds on CPU)
+
+## Deployment on a new machine
+
+Component footprint (the model is 95% of the total):
+
+| Component | Download | Disk |
+|---|---|---|
+| von-triage repo | ~65 KB | <1 MB |
+| Python 3.8+ | ~25 MB | ~100 MB |
+| Ollaya server | ~10–50 MB | ~100 MB |
+| `von` model | 1.48 GiB | 1.48 GiB |
+| **Total** | **~1.6–1.7 GB** | **~1.8 GB** |
+
+1. Install Python (or use any existing 3.8+).
+2. Install Ollaya, then `ollaya pull von` and `ollaya run von` (leave it running —
+   it listens on port 11435).
+3. Clone or copy this repository.
+4. `python von-triage.py defect "some bug text"`
+
+Windows, macOS and Linux all work; nothing in the repo is OS-specific.
 
 ## Usage
 
