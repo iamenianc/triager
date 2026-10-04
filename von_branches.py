@@ -12,6 +12,25 @@ Keep key order stable: von is option-order sensitive.
 
 RUBRIC = ["no", "yes"]  # noul probes are binary; kept for reference only
 
+# ---- 3-probe triage sets (von-triage.py) ----
+# Designed to be answerable from any writing style, terse or verbose: each probe
+# covers one axis of the severity rubric (damage / obstruction / recoverability,
+# and revenue / time / competitive pressure). worka is REVERSED polarity: yes is
+# good (less severe) and contributes (1 - p) to the sum.
+TRIAGE_PROBES = {
+    "defect": {
+        "dmg":   "Does this problem destroy, corrupt, or miscalculate any client data, saved records, or money figures?",
+        "block": "Does this problem stop someone from finishing their work, or force them to redo work they already did?",
+        "worka": "Can someone work around this problem and still finish their work today, without help?",
+    },
+    "feature": {
+        "rev":  "Would not having this feature lose the company paying clients, agencies, or business?",
+        "time": "Would this feature save people a meaningful amount of time in their daily work?",
+        "comp": "Is this feature already standard with competitors, or do users ask for it constantly?",
+    },
+}
+TRIAGE_INVERTED = {"worka"}  # reversed polarity: yes is good
+
 DEFECT_QS = {
     # Group 1: System Stability
     "crash_freq": "Does this defect cause the application to crash, freeze, or return server errors during active use?",
