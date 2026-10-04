@@ -30,7 +30,7 @@ feature 18/29 exact, 28/29 within one band (bands scoring ±1 case between runs)
 
 ## Files
 
-- `von-score.py` — scorer and per-flow band cuts. Entry point.
+- `von-triage.py` — scorer and per-flow band cuts. Entry point.
 - `von_branches.py` — the two 24-probe question sets. Key order and wording are load-bearing; von is option-order sensitive and the questions ask about consequences and magnitude.
 - `von_battery.py` — 60-case calibration battery (31 defects, 29 features) with expected bands.
 - `battery_collect.py` — runs the battery and writes per-probe probabilities to `battery_raw.json`.
@@ -45,10 +45,10 @@ Ollaya server running with `von` loaded (`ollaya run von`), listening on
 ## Usage
 
 ```
-python von-score.py defect  "The quoting engine shows wrong rider costs."
-python von-score.py feature "Please add split-dollar funding solves."
-echo "text" | python von-score.py defect
-python von-score.py -m <model> defect "text"     # default model: von
+python von-triage.py defect  "The quoting engine shows wrong rider costs."
+python von-triage.py feature "Please add split-dollar funding solves."
+echo "text" | python von-triage.py defect
+python von-triage.py -m <model> defect "text"     # default model: von
 ```
 
 Recalibrate the bands against the battery (60 server calls, about 4 minutes):

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""von-score.py - triage score 1-5 for the life-insurance quoting platform (von decision model).
+"""von-triage.py - triage score 1-5 for the life-insurance quoting platform (von decision model).
 
 Two DISCRETE flows, chosen by the caller (no router - Ian's call):
-  python von-score.py defect  "<text>"    -> Tranche 1: software bugs & defects (24 questions)
-  python von-score.py feature "<text>"    -> Tranche 2: new feature requests (24 questions)
+  python von-triage.py defect  "<text>"    -> Tranche 1: software bugs & defects (24 questions)
+  python von-triage.py feature "<text>"    -> Tranche 2: new feature requests (24 questions)
 
 Each flow asks its branch's 24 yes/no probes (8 groups x 3, from von_branches.py).
 von returns a probability 0-1 per probe (noul). No rounding in any step: the 24
@@ -23,10 +23,10 @@ No regex stripping, no steering clause: the questions ask about consequences and
 magnitude, not tone. Question wording is load-bearing; keep von_branches.py stable.
 
 Usage:
-    python von-score.py defect  "The quoting engine shows wrong rider costs."
-    python von-score.py feature "Please add split-dollar funding solves."
-    echo "text" | python von-score.py defect
-    python von-score.py -m <model> defect "text"   (default model: von)
+    python von-triage.py defect  "The quoting engine shows wrong rider costs."
+    python von-triage.py feature "Please add split-dollar funding solves."
+    echo "text" | python von-triage.py defect
+    python von-triage.py -m <model> defect "text"   (default model: von)
 
 Requires the Ollaya server running with von loaded (ollaya run von starts it).
 """
@@ -76,7 +76,7 @@ def get_args():
         MODEL = args[1]
         args = args[2:]
     if not args or args[0] not in ("defect", "feature"):
-        raise SystemExit('usage: von-score.py defect "<text>"  |  von-score.py feature "<text>"  |  echo text | von-score.py defect')
+        raise SystemExit('usage: von-triage.py defect "<text>"  |  von-triage.py feature "<text>"  |  echo text | von-triage.py defect')
     flow = args[0]
     args = args[1:]
     if args:
@@ -84,7 +84,7 @@ def get_args():
     data = sys.stdin.read().strip()
     if data:
         return flow, data
-    raise SystemExit('usage: von-score.py defect "<text>"  |  echo text | von-score.py defect')
+    raise SystemExit('usage: von-triage.py defect "<text>"  |  echo text | von-triage.py defect')
 
 
 def main():

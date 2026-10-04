@@ -1,7 +1,7 @@
-"""von_battery.py - 50-case calibration battery for von-score.py (v4 branch-router).
+"""von_battery.py - 50-case calibration battery for von-triage.py (v4 branch-router).
 Varying length, type, style: defects vs features, terse vs verbose, neutral vs
 alarmist vs understated, vague vs specific, angry vs polite, single vs multi-issue.
-Run:  python von_battery.py   (needs von-score.py + von_branches.py alongside)
+Run:  python von_battery.py   (needs von-triage.py + von_branches.py alongside)
 Expected bands are triage intuitions, not labels von sees.
 """
 import os, sys, subprocess, time
@@ -86,7 +86,7 @@ CASES = [
 ]
 
 def run_py(flow, text):
-    p = subprocess.run([sys.executable, os.path.join(FILES, "von-score.py"), flow, text],
+    p = subprocess.run([sys.executable, os.path.join(FILES, "von-triage.py"), flow, text],
                        capture_output=True, text=True, cwd=FILES, timeout=180)
     return p.stdout.strip(), p.stderr.strip()
 

@@ -1,4 +1,4 @@
-"""Branch question sets for the insurance-platform triage scorer (von-score.py v6).
+"""Branch question sets for the insurance-platform triage scorer (von-triage.py v6).
 Ian's revised set: factual yes/no probes (noul), each scored by von as a float 0-1.
 No rounding anywhere: probabilities are summed as floats.
 
