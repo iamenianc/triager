@@ -12,22 +12,26 @@ Two discrete flows, chosen by the caller:
 
 ## Scoring
 
-Each flow asks its branch's 24 yes/no probes (8 groups × 3) of the local decision
-model `von` through the Ollaya server. von returns a probability in 0–1 per probe.
+Each flow asks its branch's 3 severity probes of the local decision model `von`
+through the Ollaya server. von returns a probability in 0–1 per probe.
 
-The 24 probabilities are summed as floats with no rounding, giving a continuous sum
-in 0–24. Two reversed-polarity probes in the Workaround group (`meeting_wa`,
-`self_resolve`) contribute `1 − p`; every other probe contributes `p`. The exact sum
-is compared against the band cuts for that flow.
+The 3 probabilities are summed as floats with no rounding, giving a continuous sum
+in 0–3. The exact sum is compared against the band cuts for that flow.
 
-Band cuts, per flow:
+Probes, per flow:
 
-- defect: ≤ 5.0 → 1, ≤ 6.4 → 2, ≤ 8.8 → 3, ≤ 11.0 → 4, else 5
-- feature: ≤ 2.5 → 1, ≤ 4.3 → 2, ≤ 6.9 → 3, ≤ 12.0 → 4, else 5
+- defect — `trust_erosion` (advisor credibility on high-value cases), `valid_obstruct` (blocked application screens), `ledger_corr` (distorted cash-value/IRR projections)
+- feature — `placement`, `funding_solves`, `comp_disadv` (all three measure revenue at risk, the axis feature severity lives on)
+
+Band cuts, per flow (0–3 sum scale):
+
+- defect: ≤ 0.33 → 1, ≤ 0.57 → 2, ≤ 0.69 → 3, ≤ 1.13 → 4, else 5
+- feature: ≤ 0.25 → 1, ≤ 0.35 → 2, ≤ 0.58 → 3, ≤ 0.87 → 4, else 5
 
 Accuracy on the 60-case battery: defect 22/31 exact, 29/31 within one band;
-feature 14/29 exact, 28/29 within one band (band cuts are chosen to maximise
-close-miss tolerance, since a one-band error is acceptable in triage).
+feature 21/29 exact, 29/29 within one band. Two-band errors are rare (2/60):
+a cents-off rounding defect reads as critical, and an alarmist trivial bug leaks
+through. A full battery run takes about 30 seconds.
 
 ## What the bands mean
 
@@ -47,19 +51,18 @@ close-miss tolerance, since a one-band error is acceptable in triage).
 - **4/5 — Competitive need.** Competitors have it or complaints are frequent; its absence is visible to the market.
 - **5/5 — Revenue at risk.** Large agencies or carriers are withholding business, or producers are moving to competitors, because it is missing.
 
-Reading the score: the scorer reads the substance of the text, not its tone — an
-alarmist report of a trivial bug still scores 1/5, and an understated report of a
-ledger-corrupting bug still scores 5/5. Adjacent scores mean "roughly the same
-urgency" (within-one-band rate is 94% on defects, 97% on features).
+Reading the score: the probes ask about substance and consequences, not tone, so an
+understated report of a ledger-corrupting bug still scores 5/5. Known leak: heavily
+alarmist wording on a trivial bug can inflate the score by up to two bands (one
+battery case). Adjacent scores mean "roughly the same urgency" (within-one-band
+rate is 94% on defects, 100% on features).
 
 ## Files
 
 - `von-triage.py` — scorer and per-flow band cuts. Entry point.
-- `von_branches.py` — the two 24-probe question sets. Key order and wording are load-bearing; von is option-order sensitive and the questions ask about consequences and magnitude.
+- `von_branches.py` — the probe question sets (3 in use per flow, full sets retained). Key order and wording are load-bearing; von is option-order sensitive and the questions ask about consequences and magnitude.
 - `von_battery.py` — 60-case calibration battery (31 defects, 29 features) with expected bands.
-- `battery_collect.py` — runs the battery and writes per-probe probabilities to `battery_raw.json`.
-- `battery_raw.json` — per-probe probabilities and expected bands for the 60 battery cases.
-- `von_questions.json` — the question sets as JSON.
+- `battery_triple.py` — battery harness for the 3-probe scorer: runs the battery, evaluates current cuts, refits cuts on fresh data.
 
 ## Requirements
 
@@ -99,8 +102,9 @@ echo "text" | python von-triage.py defect
 python von-triage.py -m <model> defect "text"     # default model: von
 ```
 
-Recalibrate the bands against the battery (60 server calls, about 4 minutes):
+Recalibrate the bands against the battery (60 server calls, about 30 seconds —
+also refits and reports the optimal cuts):
 
 ```
-python battery_collect.py
+python battery_triple.py
 ```

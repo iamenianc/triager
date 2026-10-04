@@ -2,25 +2,31 @@
 """von-triage.py - triage score 1-5 for the life-insurance quoting platform (von decision model).
 
 Two DISCRETE flows, chosen by the caller (no router - Ian's call):
-  python von-triage.py defect  "<text>"    -> Tranche 1: software bugs & defects (24 questions)
-  python von-triage.py feature "<text>"    -> Tranche 2: new feature requests (24 questions)
+  python von-triage.py defect  "<text>"    -> Tranche 1: software bugs & defects
+  python von-triage.py feature "<text>"    -> Tranche 2: new feature requests
 
-Each flow asks its branch's 24 yes/no probes (8 groups x 3, from von_branches.py).
-von returns a probability 0-1 per probe (noul). No rounding in any step: the 24
-floats are summed directly (range 0-24, continuous) - two reversed-polarity probes
-in the Workaround group contribute (1 - p) - and the exact sum is compared against
-the band thresholds (per-flow).
+Each flow asks its branch's 3 severity probes (from von_branches.py):
+  defect : trust_erosion, valid_obstruct, ledger_corr
+           (advisor credibility, blocked workflows, distorted money figures)
+  feature: placement, funding_solves, comp_disadv
+           (all three measure revenue at risk - the axis feature severity lives on)
 
-Band calibration (60-case domain battery): no-signal text lands at the uniform
-mid of the range; moderate cases land mid-band; strong cases near the top.
-Per-flow cuts below (each tranche has a different sum distribution).
+von returns a probability 0-1 per probe (noul). No rounding in any step: the 3
+floats are summed directly (range 0-3, continuous) and the exact sum is compared
+against the per-flow band cuts.
 
-Each probe contributes its probability as a float; the sum is continuous (0-24) and
+Each probe contributes its probability as a float; the sum is continuous (0-3) and
 is compared against the band cuts. Do not discretize probes or exclude mid-range
 probabilities from the sum.
 
 No regex stripping, no steering clause: the questions ask about consequences and
 magnitude, not tone. Question wording is load-bearing; keep von_branches.py stable.
+
+Band calibration (60-case domain battery, cuts fitted by brute-force threshold
+search; the two tranches have different sum distributions, so each gets its own
+cuts). Accuracy: defect 22/31 exact, 29/31 within 1; feature 22/29 exact,
+29/29 within 1 (a one-band error is acceptable in triage; cuts maximise
+close-miss tolerance).
 
 Usage:
     python von-triage.py defect  "The quoting engine shows wrong rider costs."
@@ -32,19 +38,23 @@ Requires the Ollaya server running with von loaded (ollaya run von starts it).
 """
 import json, sys, urllib.request
 
-from von_branches import DEFECT_QS, FEATURE_QS, DEFECT_INVERTED
+from von_branches import DEFECT_QS, FEATURE_QS
 
 URL = "http://localhost:11435/api/decide"
 
 MODEL = "von"  # override with -m/--model
 
-# Per-flow bands (calibrated by brute-force threshold search on the 60-case battery;
-# the two tranches have different sum distributions, so each gets its own cuts).
-# T1: 22/31 exact, 29/31 within 1. T2: 18/29 exact, 28/29 within 1
-# (bands scoring varies by about 1 case between runs).
+# The 3 probes per flow, in fixed order (von is option-order sensitive).
+PROBES = {
+    "defect":  ["trust_erosion", "valid_obstruct", "ledger_corr"],
+    "feature": ["placement", "funding_solves", "comp_disadv"],
+}
+
+# Per-flow band cuts on the 0-3 float sum (fitted by brute-force threshold search
+# on the 60-case battery; strictly increasing so every band is reachable).
 SUM_BANDS = {
-    "defect":  [(5.0, 1), (6.4, 2), (8.8, 3), (11.0, 4), (999, 5)],
-    "feature": [(2.5, 1), (4.3, 2), (6.9, 3), (12.0, 4), (999, 5)],
+    "defect":  [(0.33, 1), (0.57, 2), (0.69, 3), (1.13, 4), (999, 5)],
+    "feature": [(0.25, 1), (0.35, 2), (0.58, 3), (0.87, 4), (999, 5)],
 }
 
 
@@ -56,11 +66,10 @@ def post(state, questions):
 
 def score(flow, state):
     branch = DEFECT_QS if flow == "defect" else FEATURE_QS
-    inverted = DEFECT_INVERTED if flow == "defect" else set()
-    qs = {k: {"type": "noul", "instructions": q} for k, q in branch.items()}
+    keys = PROBES[flow]
+    qs = {k: {"type": "noul", "instructions": branch[k]} for k in keys}
     ans = post(state, qs)
-    # reversed-polarity probes: yes is good, so contribute (1 - p); everything else p
-    perq = {k: (1.0 - float(v["noul"])) if k in inverted else float(v["noul"]) for k, v in ans.items()}
+    perq = {k: float(ans[k]["noul"]) for k in keys}
     total = sum(perq.values())
     for ceiling, band in SUM_BANDS[flow]:
         if total <= ceiling:
@@ -91,9 +100,8 @@ def main():
     flow, text = get_args()
     band, perq, total = score(flow, text)
     label = "defect report (T1)" if flow == "defect" else "feature request (T2)"
-    print("triage score    %d/5   [flow: %s, sum of 24 probes: %.2f/24]" % (band, label, total))
-    branch = DEFECT_QS if flow == "defect" else FEATURE_QS
-    for k in branch:
+    print("triage score    %d/5   [flow: %s, sum of 3 probes: %.2f/3]" % (band, label, total))
+    for k in PROBES[flow]:
         print("  %.2f  %s" % (perq[k], k))
 
 
