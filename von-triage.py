@@ -101,7 +101,8 @@ def main():
     flow, text = get_args()
     band, perq, total = score(flow, text)
     label = "defect report (T1)" if flow == "defect" else "feature request (T2)"
-    print("triage score    %d/5   [flow: %s, sum of 3 probes: %.2f/3]" % (band, label, total))
+    n_probes = len(PROBES[flow])
+    print("triage score    %d/5   [flow: %s, sum of %d probes: %.2f/%d]" % (band, label, n_probes, total, n_probes))
     for k in PROBES[flow]:
         print("  %.2f  %s" % (perq[k], k))
 
