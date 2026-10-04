@@ -1,0 +1,24 @@
+{
+  "urgency": {
+    "type": "score",
+    "instructions": "How urgent is this, judged only by severity and whether a workaround exists? Do not consider how many people are affected. 5 = urgent/critical, 1 = low priority.",
+    "criteria": [
+      "1 - Very low: informational or cosmetic, nothing is broken",
+      "2 - Low: minor issue, easy workaround, no deadline",
+      "3 - Medium: real disruption, workaround exists, can wait a few hours",
+      "4 - High: workaround exists but is painful or costly, needs prompt attention",
+      "5 - Urgent/Critical: no workaround exists, work is fully blocked, needs immediate action"
+    ]
+  },
+  "impact": {
+    "type": "score",
+    "instructions": "How wide is the impact? 5 = business-wide or customer-facing outage, 1 = a single user's machine.",
+    "criteria": [
+      "1 - Single user's machine only",
+      "2 - A few users or one small team",
+      "3 - One department or a moderate-sized group",
+      "4 - Multiple departments / large part of the business",
+      "5 - Business-wide or customer-facing: company-critical, many or all staff affected"
+    ]
+  }
+}
