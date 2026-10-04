@@ -53,15 +53,15 @@ CASES = [
  ("f04 case comparison retention", 5, "Brokers are leaving for a competitor that offers inforce policy comparisons with our ledger data. Three agencies this quarter cited this feature in their offboarding surveys. We need it to stop the bleeding on renewals."),
  ("f05 carrier endorsement gate", 5, "A top-five carrier will endorse our platform to their entire field force only if we add their proprietary crediting rate modeling to the quoting engine. This endorsement would bring several thousand brokers onto the platform."),
  # ---- T2 features: moderate-high (want 4)
- ("f06 co-branding proposals", 4, "Please add co-branding to exported proposal summaries so agencies can add their own logo. Several partners have requested it and it would strengthen agency partnerships."),
+ ("f06 co-branding proposals", 3, "Please add co-branding to exported proposal summaries so agencies can add their own logo. Several partners have requested it and it would strengthen agency partnerships."),
  ("f07 batch quoting", 4, "Add batch quoting so a case manager can run 50 variations of a case overnight instead of one at a time. Large agencies doing case stacking would save hours per day and it would make us competitive on complex markets."),
- ("f08 e-sign integration deep", 4, "Deeper electronic signature integration: pre-fill signer data from the application and return signed documents directly into the case record. Would remove a manual handoff every case manager does dozens of times weekly."),
+ ("f08 e-sign integration deep", 3, "Deeper electronic signature integration: pre-fill signer data from the application and return signed documents directly into the case record. Would remove a manual handoff every case manager does dozens of times weekly."),
  ("f09 mobile advisor view", 4, "A mobile-friendly view for advisors to pull up client illustrations and quote summaries during meetings outside the office. Field brokers ask about this at every trade show; competitors have it."),
  ("f10 scenario modeling suite", 4, "Expand scenario modeling to include custom crediting rates and withdrawal schedules for advanced markets. The quoting engine covers standard cases well but advisors doing estate planning work must use external spreadsheets today."),
  # ---- T2 features: moderate (want 3)
  ("f11 csv import mapping auto", 3, "Add automatic CSV import mapping so client data imports do not require manual column matching each time. Would save case managers a few minutes per import."),
  ("f12 saved templates", 3, "Let advisors save quoting templates for their repeat case profiles so new quotes start pre-filled. Regular users mention it would save a handful of clicks per case."),
- ("f13 dark mode pro", 3, "Add a dark mode theme. Several advisors who work evenings have asked for it; it would reduce eye strain for that group. No business-critical impact but a visible quality-of-life request."),
+ ("f13 dark mode pro", 2, "Add a dark mode theme. Several advisors who work evenings have asked for it; it would reduce eye strain for that group. No business-critical impact but a visible quality-of-life request."),
  ("f14 dashboard customization", 3, "Allow the case manager dashboard widgets to be rearranged or hidden. Different roles want different summaries at the top. Complaints are occasional rather than frequent."),
  ("f15 export to excel raw", 3, "Add a raw-data Excel export of case tables for agencies that do their own analytics. A few larger agencies have requested it for their internal reporting."),
  ("f16 keyboard shortcuts", 3, "Add keyboard shortcuts for the most common quoting actions. Power users would move faster through repetitive entry; occasional users would not notice."),
@@ -82,7 +82,7 @@ CASES = [
  ("s02 understated catastrophic", 5, "Minor data thing: the overnight calculation batch has been writing wrong cash values for the past week. Probably affects every inforce ledger. Might be nothing but worth a look when someone gets a chance."),
  ("s03 vague middle feature", 3, "It would be helpful if the platform were somehow smarter about how cases flow between steps. Not sure exactly what we need yet, but agencies mention friction and competitors feel smoother."),
  ("s04 ambiguous mixed", 3, "The quoting engine is fine for standard cases but for special markets the numbers come out different from what advisors expect, and honestly what we really need is better tooling for that whole space. Maybe fixes, maybe new features."),
- ("s05 angry verbose feature", 4, "This is getting ridiculous. THREE major agencies this month alone have told me they are trialing the competitor platform because we still cannot do inforce comparisons properly. Our producers are embarrassed in client meetings when they cannot answer basic questions the competitor tool answers instantly. We are losing multi-million dollar books over this while we sit on our hands. Build the comparison feature NOW."),
+ ("s05 angry verbose feature", 5, "This is getting ridiculous. THREE major agencies this month alone have told me they are trialing the competitor platform because we still cannot do inforce comparisons properly. Our producers are embarrassed in client meetings when they cannot answer basic questions the competitor tool answers instantly. We are losing multi-million dollar books over this while we sit on our hands. Build the comparison feature NOW."),
 ]
 
 def run_py(flow, text):

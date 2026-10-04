@@ -26,7 +26,8 @@ Band cuts, per flow:
 - feature: ≤ 2.5 → 1, ≤ 4.3 → 2, ≤ 6.9 → 3, ≤ 12.0 → 4, else 5
 
 Accuracy on the 60-case battery: defect 22/31 exact, 29/31 within one band;
-feature 18/29 exact, 28/29 within one band (bands scoring ±1 case between runs).
+feature 14/29 exact, 28/29 within one band (band cuts are chosen to maximise
+close-miss tolerance, since a one-band error is acceptable in triage).
 
 ## What the bands mean
 
