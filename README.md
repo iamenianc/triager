@@ -28,6 +28,29 @@ Band cuts, per flow:
 Accuracy on the 60-case battery: defect 22/31 exact, 29/31 within one band;
 feature 18/29 exact, 28/29 within one band (bands scoring ±1 case between runs).
 
+## What the bands mean
+
+**Defect score (T1)** — how badly the defect hurts the business today.
+
+- **1/5 — Trivial.** Purely cosmetic; nobody's work is affected (typo in help text, stale favicon).
+- **2/5 — Minor annoyance.** Everything works, just untidy or slightly harder to use (misaligned button, saved cases not sorted newest-first).
+- **3/5 — Real friction.** Slows advisors down or forces a workaround, but nothing is wrong, lost, or blocked (slow exports, intermittent freezes, cents-off rounding).
+- **4/5 — Serious.** Advisors get stuck or lose meaningful work (validation blocking applications, drafts vanishing, wrong premium tables).
+- **5/5 — Critical.** Money is wrong, data is lost, the system crashes, or documents are non-compliant — hitting many brokers across product lines with no workaround, often in front of clients.
+
+**Feature score (T2)** — how much not having the feature costs the business.
+
+- **1/5 — Novelty.** No workflow value (confetti animation, custom cursor colors).
+- **2/5 — Nice-to-have.** A few users would enjoy it; no one loses anything without it.
+- **3/5 — Convenience.** Saves real time for regular users; often requested, but nothing is lost or won without it.
+- **4/5 — Competitive need.** Competitors have it or complaints are frequent; its absence is visible to the market.
+- **5/5 — Revenue at risk.** Large agencies or carriers are withholding business, or producers are moving to competitors, because it is missing.
+
+Reading the score: the scorer reads the substance of the text, not its tone — an
+alarmist report of a trivial bug still scores 1/5, and an understated report of a
+ledger-corrupting bug still scores 5/5. Adjacent scores mean "roughly the same
+urgency" (within-one-band rate is 94% on defects, 97% on features).
+
 ## Files
 
 - `von-triage.py` — scorer and per-flow band cuts. Entry point.
