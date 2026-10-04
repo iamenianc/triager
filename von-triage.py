@@ -91,7 +91,7 @@ def main():
     flow, text = get_args()
     band, perq, total = score(flow, text)
     label = "defect report (T1)" if flow == "defect" else "feature request (T2)"
-    print("score    %d/5   [flow: %s, sum of 24 probes: %.2f/24]" % (band, label, total))
+    print("triage score    %d/5   [flow: %s, sum of 24 probes: %.2f/24]" % (band, label, total))
     branch = DEFECT_QS if flow == "defect" else FEATURE_QS
     for k in branch:
         print("  %.2f  %s" % (perq[k], k))
