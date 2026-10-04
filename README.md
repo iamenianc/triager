@@ -12,29 +12,28 @@ Two discrete flows, chosen by the caller:
 
 ## Scoring
 
-Each flow asks its branch's 3 severity probes of the local decision model `von`
+Each flow asks its branch's 4 severity probes of the local decision model `von`
 through the Ollaya server. von returns a probability in 0–1 per probe. Each probe
 covers one axis of the severity rubric and is answerable from any writing style,
 terse or verbose.
 
-The 3 probabilities are summed as floats with no rounding, giving a continuous sum
-in 0–3 (the reversed `worka` probe contributes `1 − p`). The exact sum is compared
-against the band cuts for that flow.
+The 4 probabilities are summed as floats with no rounding, giving a continuous sum
+in 0–4. The exact sum is compared against the band cuts for that flow.
 
 Probes, per flow:
 
-- defect — `dmg` (destroys, corrupts, or miscalculates client data, records, or money), `block` (stops someone finishing their work or forces redoing it), `worka` (reversed: can it be worked around today without help)
-- feature — `rev` (not having it loses paying clients or business), `time` (saves a meaningful amount of daily time), `comp` (already standard with competitors or constantly requested)
+- defect — `dmg` (destroys, corrupts, or miscalculates client data, records, or money), `block` (stops someone finishing their work or forces redoing it), `client_visible` (happens in front of clients or affects client documents), `all` (meaningfully impacts 100% of the user base)
+- feature — `rev` (not having it loses paying clients or business), `time` (saves a meaningful amount of daily time), `manual` (currently done by hand, in spreadsheets, or with outside tools), `all` (meaningfully impacts 100% of the user base)
 
-Band cuts, per flow (0–3 sum scale):
+Band cuts, per flow (0–4 sum scale):
 
-- defect: ≤ 0.79 → 1, ≤ 1.17 → 2, ≤ 1.21 → 3, ≤ 1.57 → 4, else 5
-- feature: ≤ 0.68 → 1, ≤ 0.71 → 2, ≤ 1.42 → 3, ≤ 1.44 → 4, else 5
+- defect: ≤ 0.84 → 1, ≤ 1.14 → 2, ≤ 1.50 → 3, ≤ 2.27 → 4, else 5
+- feature: ≤ 0.78 → 1, ≤ 1.07 → 2, ≤ 1.78 → 3, ≤ 2.65 → 4, else 5
 
 Accuracy on the two 60-case batteries combined (120 cases: one verbose
-professional style, one terse intern style): defect 53% exact, 92% within one
-band; feature 55% exact, 84% within one band. A full battery run takes about
-2 minutes.
+professional style, one terse intern style): defect 61% exact, 82% within one
+band; feature 52% exact, 81% within one band. A full battery run takes about
+75 seconds.
 
 ## What the bands mean
 
@@ -65,7 +64,7 @@ rate is 94% on defects, 100% on features).
 - `von-triage.py` — scorer and per-flow band cuts. Entry point.
 - `von_branches.py` — the probe question sets (3 in use per flow, full sets retained). Key order and wording are load-bearing; von is option-order sensitive and the questions ask about consequences and magnitude.
 - `von_battery.py` — 60-case calibration battery (31 defects, 29 features) with expected bands.
-- `battery_triple.py` — battery harness for the 3-probe scorer: runs both batteries (120 cases), evaluates current cuts, refits cuts.
+- `battery_triple.py` — battery harness for the scorer: runs both batteries (120 cases), evaluates current cuts, refits cuts.
 
 ## Requirements
 

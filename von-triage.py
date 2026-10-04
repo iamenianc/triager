@@ -7,15 +7,18 @@ Two DISCRETE flows, chosen by the caller (no router - Ian's call):
 
 Each flow asks its branch's 3 severity probes (from von_branches.py TRIAGE_PROBES):
   defect : dmg (destroys/corrupts/miscalculates data or money),
-           block (stops work or forces redo), worka (easy workaround - REVERSED)
+           block (stops work or forces redo),
+           client_visible (happens in front of clients or affects client documents),
+           all (meaningfully impacts 100% of the user base)
   feature: rev (missing it loses business), time (saves real daily time),
-           comp (standard with competitors or constantly requested)
+           manual (currently done by hand, in spreadsheets, or with outside tools),
+           all (meaningfully impacts 100% of the user base)
 
-von returns a probability 0-1 per probe (noul). No rounding in any step: the 3
-floats are summed directly (range 0-3, continuous; the reversed worka probe
-contributes 1 - p) and the exact sum is compared against the per-flow band cuts.
+von returns a probability 0-1 per probe (noul). No rounding in any step: the 4
+floats are summed directly (range 0-4, continuous) and the exact sum is compared
+against the per-flow band cuts.
 
-Each probe contributes its probability as a float; the sum is continuous (0-3) and
+Each probe contributes its probability as a float; the sum is continuous (0-4) and
 is compared against the band cuts. Do not discretize probes or exclude mid-range
 probabilities from the sum.
 
@@ -25,8 +28,8 @@ magnitude, not tone. Question wording is load-bearing; keep von_branches.py stab
 Band calibration (two 60-case batteries, one verbose professional style and one
 terse intern style; cuts fitted by brute-force threshold search on the combined
 120 cases; the two tranches have different sum distributions, so each gets its
-own cuts). Accuracy on the combined set: defect 53% exact, 92% within 1;
-feature 55% exact, 84% within 1 (a one-band error is acceptable in triage).
+own cuts). Accuracy on the combined set: defect 61% exact, 82% within 1;
+feature 52% exact, 81% within 1 (a one-band error is acceptable in triage).
 
 Usage:
     python von-triage.py defect  "The quoting engine shows wrong rider costs."
@@ -47,11 +50,12 @@ MODEL = "von"  # override with -m/--model
 # The 3 probes per flow, in fixed order (von is option-order sensitive).
 PROBES = {flow: list(qs.keys()) for flow, qs in TRIAGE_PROBES.items()}
 
-# Per-flow band cuts on the 0-3 float sum (fitted by brute-force threshold search
-# on the 60-case battery; strictly increasing so every band is reachable).
+# Per-flow band cuts on the 0-4 float sum (fitted by brute-force threshold search
+# on the combined 120 cases of batteries A and B; strictly increasing so every
+# band is reachable).
 SUM_BANDS = {
-    "defect":  [(0.79, 1), (1.17, 2), (1.21, 3), (1.57, 4), (999, 5)],
-    "feature": [(0.68, 1), (0.71, 2), (1.42, 3), (1.44, 4), (999, 5)],
+    "defect":  [(0.84, 1), (1.14, 2), (1.50, 3), (2.27, 4), (999, 5)],
+    "feature": [(0.78, 1), (1.07, 2), (1.78, 3), (2.65, 4), (999, 5)],
 }
 
 
