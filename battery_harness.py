@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""battery_harness.py - score the battery with the live probes, fit the per-flow
+"""battery_harness.py - score the defect battery with the live probes, fit the
 band cuts under an asymmetric error cost, and report accuracy.
 
 Cuts are fitted to minimise total error cost, where over-rating severity costs
@@ -7,35 +7,31 @@ double what under-rating costs (a too-high band burns escalation capacity on
 trivia; a too-low band still surfaces one band later). Ties break toward exact
 hits, then within-1, then the higher band-5 cut: prefer to under-rate.
 
+Scoring and dominance rules come from von-triage.py itself (loaded at runtime),
+so the harness can never drift from production.
+
 The battery is both the fitting set and the only measurement we have, so the
 reported accuracy is in-sample. Treat it as a calibration report, not a
 generalisation estimate.
 
 Run:  python battery_harness.py   (~1 min, one server call per case)
 """
-import json, time, urllib.request, os
+import json, time, urllib.request, os, importlib.util
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 URL = "http://localhost:11435/api/decide"
 MODEL = "von"
 OUT = os.path.join(BASE, "battery_results.json")
 
-from battery import CASES, flow_for
+from battery import CASES
 from von_branches import TRIAGE_PROBES, TRIAGE_INVERTED
 
-DMG_FLOOR5, DMG_FLOOR4, REV_FLOOR5, ALL_FLOOR5 = 0.90, 0.70, 0.50, 0.40
+# Load the production scorer so floors, cuts, and probes are shared, not duplicated.
+_spec = importlib.util.spec_from_file_location("von_triage", os.path.join(BASE, "von-triage.py"))
+von_triage = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(von_triage)
 
-
-def apply_rules(flow, perq, band):
-    if flow == "defect":
-        if perq["dmg"] >= DMG_FLOOR5:
-            return max(band, 5)
-        if perq["dmg"] >= DMG_FLOOR4:
-            return max(band, 4)
-    else:
-        if perq["rev"] >= REV_FLOOR5 and perq["all"] >= ALL_FLOOR5:
-            return max(band, 5)
-    return band
+apply_rules = von_triage.apply_rules
 
 
 def post(state, qs):
@@ -60,7 +56,7 @@ def err_cost(got, want):
     return (OVER_COST if d > 0 else UNDER_COST)[min(abs(d), 2)]
 
 
-def refit(sub, flow):
+def refit(sub):
     totals = sorted(set(round(r["total"], 3) for r in sub))
     mids = sorted(set(round((totals[i] + totals[i+1]) / 2, 3) for i in range(len(totals)-1)))
     best = None
@@ -70,7 +66,7 @@ def refit(sub, flow):
                 for c4 in [m for m in mids if m > c3]:
                     cost = ex = wi = 0
                     for r in sub:
-                        g = apply_rules(flow, r["probs"], band_of(r["total"], (c1, c2, c3, c4)))
+                        g = apply_rules(r["probs"], band_of(r["total"], (c1, c2, c3, c4)))
                         cost += err_cost(g, r["want"])
                         ex += 1 if g == r["want"] else 0
                         wi += 1 if abs(g - r["want"]) <= 1 else 0
@@ -87,34 +83,35 @@ def main():
     results = []
     t0 = time.time()
     for i, (name, want, text) in enumerate(CASES):
-        flow = flow_for(name)
-        keys = list(TRIAGE_PROBES[flow].keys())
-        qs = {k: {"type": "noul", "instructions": TRIAGE_PROBES[flow][k]} for k in keys}
+        keys = von_triage.PROBES
+        qs = {k: {"type": "noul", "instructions": TRIAGE_PROBES["defect"][k]} for k in keys}
         t = time.time()
         ans = post(text, qs)
         probs = {k: (1.0 - float(ans[k]["noul"])) if k in TRIAGE_INVERTED else float(ans[k]["noul"]) for k in keys}
-        results.append({"name": name, "want": want, "flow": flow, "probs": probs, "total": sum(probs.values())})
+        results.append({"name": name, "want": want, "probs": probs, "total": sum(probs.values())})
         print(f"[{i+1}/{len(CASES)}] {name:32} want{want} sum={sum(probs.values()):.2f} ({time.time()-t:.2f}s)", flush=True)
     with open(OUT, "w") as f:
         json.dump(results, f)
     print(f"\nDONE {len(results)} cases in {time.time()-t0:.0f}s")
 
-    for flow in ("defect", "feature"):
-        sub = [r for r in results if r["flow"] == flow]
-        (cost, nex, nwi, _), cuts = refit(sub, flow)
-        ex, wi = -nex, -nwi
-        scored = [(r, apply_rules(flow, r["probs"], band_of(r["total"], cuts))) for r in sub]
-        over = sum(1 for r, g in scored if g > r["want"])
-        under = sum(1 for r, g in scored if g < r["want"])
-        print(f"\n== {flow} ({len(sub)} cases): cuts {cuts} -> exact {ex}/{len(sub)} ({100*ex/len(sub):.0f}%), within1 {wi}/{len(sub)} ({100*wi/len(sub):.0f}%), cost {cost:.1f}, over {over} / under {under}")
-        for r, g in scored:
-            mark = "OK " if g == r["want"] else "~  " if abs(g - r["want"]) <= 1 else "X  "
-            print(f"   {mark} {r['name']:32} want{r['want']} got{g} sum={r['total']:.2f}")
-        import statistics
-        for k in TRIAGE_PROBES[flow]:
-            means = {w: round(statistics.mean(r["probs"][k] for r in sub if r["want"] == w), 2)
-                     for w in sorted(set(r["want"] for r in sub))}
-            print(f"   probe {k}: mean by want {means}")
+    sub = results
+    (cost, nex, nwi, _), cuts = refit(sub)
+    ex, wi = -nex, -nwi
+    scored = [(r, apply_rules(r["probs"], band_of(r["total"], cuts))) for r in sub]
+    over = sum(1 for r, g in scored if g > r["want"])
+    under = sum(1 for r, g in scored if g < r["want"])
+    print(f"\n== defect ({len(sub)} cases): fitted cuts {cuts} -> exact {ex}/{len(sub)} ({100*ex/len(sub):.0f}%), within1 {wi}/{len(sub)} ({100*wi/len(sub):.0f}%), cost {cost:.1f}, over {over} / under {under}")
+    prod = tuple(c for c, _ in von_triage.SUM_BANDS[:4])
+    prod_cost = sum(err_cost(apply_rules(r["probs"], band_of(r["total"], prod)), r["want"]) for r in sub)
+    print(f"   production cuts {prod} -> cost {prod_cost:.1f}{'  (matches fit)' if prod == cuts else '  (DIFFERS from fitted cuts)'}")
+    for r, g in scored:
+        mark = "OK " if g == r["want"] else "~  " if abs(g - r["want"]) <= 1 else "X  "
+        print(f"   {mark} {r['name']:32} want{r['want']} got{g} sum={r['total']:.2f}")
+    import statistics
+    for k in von_triage.PROBES:
+        means = {w: round(statistics.mean(r["probs"][k] for r in sub if r["want"] == w), 2)
+                 for w in sorted(set(r["want"] for r in sub))}
+        print(f"   probe {k}: mean by want {means}")
 
 
 if __name__ == "__main__":

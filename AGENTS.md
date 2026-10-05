@@ -1,7 +1,8 @@
 # Triager (von-triage) — session context
 
-Severity triage scorer for a life-insurance quoting platform. A defect report or
-feature request goes in; a 1–5 band comes out. Repo: github.com/iamenianc/triager
+Severity triage scorer for a life-insurance quoting platform. A defect report
+goes in; a 1–5 band comes out. Feature-request triage is deprecated; the focus
+is purely bugs/defects. Repo: github.com/iamenianc/triager
 (local: C:\Users\ianch\Hermes\Files\von-triage).
 
 ## Current production config
@@ -10,28 +11,25 @@ feature request goes in; a 1–5 band comes out. Repo: github.com/iamenianc/tria
   `http://localhost:11435` — endpoint `/api/decide`, question types `noul` / `score` / `choice`.
   Other checkpoint available: `laya:en`, `laya:multilingual` (Laya, from Convai; 683–853 MB).
 - Scorer: `von-triage.py` (CLI: `python von-triage.py defect|feature "<text>"`, `-m <model>` to override).
-- Four probes per flow, each prefaced with a goal statement
-  (`"Your goal is to accurately triage user bug reports. "` / `"...feature requests. "`):
-  - defect: `dmg` (destroy/corrupt/miscalculate data, records, money, or expose private client information),
-    `block` (stops work or forces redo), `client_visible` (happens in front of clients / affects client documents),
-    `all` (meaningfully impacts 100% of the user base)
-  - feature: `rev` (not having it loses paying clients/business), `time` (saves meaningful daily time),
-    `manual` (currently done by hand / spreadsheets / outside tools), `all` (same 100% question)
-- Probes summed as floats, no rounding (0–4 scale), matched to per-flow cuts fitted
+- Four probes, each prefaced with the goal statement
+  (`"Your goal is to accurately triage user bug reports. "`):
+  `dmg` (destroy/corrupt/miscalculate data, records, money, or expose private client information),
+  `block` (stops work or forces redo), `client_visible` (happens in front of clients / affects client documents),
+  `all` (meaningfully impacts 100% of the user base)
+- Probes summed as floats, no rounding (0–4 scale), matched to cuts fitted
   under an ASYMMETRIC error cost (over-rating costs double under-rating; Ian's policy:
   prefer to under-rate). Ties break toward exact, within-1, then the higher band-5 cut:
-  - defect: ≤0.841 → 1, ≤1.577 → 2, ≤1.77 → 3, ≤3.29 → 4, else 5
-  - feature: ≤0.888 → 1, ≤1.05 → 2, ≤1.083 → 3, ≤2.379 → 4, else 5
+  - ≤0.841 → 1, ≤1.577 → 2, ≤1.77 → 3, ≤3.372 → 4, else 5
 - Damage-dominance rules, applied after the cuts (the rubric's hard signal must not be
   outvoted by softer probes; no battery case in bands 1–4 reads dmg ≥ 0.88, max 0.87):
-  - defect: `dmg` ≥ 0.88 → at least 5; `dmg` ≥ 0.70 → at least 4
-  - feature: `rev` ≥ 0.50 and `all` ≥ 0.40 → at least 5
-- Battery: `battery.py` — 61 cases (32 defect / 29 feature), written in a
+  - `dmg` ≥ 0.88 → at least 5; `dmg` ≥ 0.70 → at least 4
+- Battery: `battery.py` — 32 defect cases, written in a
   standard, objective, unemotional, professional business-user register.
-  `battery_harness.py` scores it (~60 s), refits cuts under the asymmetric cost, prints
-  per-case results and probe discrimination. Last run: defect 50% exact / 97% within-1
-  (5 over / 11 under); feature 55% / 90% (8 over / 5 under) — in-sample, this is the
-  only battery, so treat as calibration, not generalisation. The band-5 cut of 3.29
+  `battery_harness.py` scores it (~35 s), refits cuts under the asymmetric cost
+  (it loads von-triage.py at runtime, so floors/cuts cannot drift), prints
+  per-case results and probe discrimination. Last run: 50% exact / 97% within-1
+  (5 over / 11 under) — in-sample, this is the
+  only battery, so treat as calibration, not generalisation. The band-5 cut of 3.372
   puts several true-5 defects at 4 — accepted under the prefer-under-rate policy;
   wrong money still reaches 5 via the `dmg` ≥ 0.88 floor.
 
@@ -54,7 +52,6 @@ feature request goes in; a 1–5 band comes out. Repo: github.com/iamenianc/tria
   question, single `choice` question picking the band directly, 24-probe set, 3-probe set,
   two-stage router with confidence gate, scripted 3-layer hierarchical tree (both `choice`
   and binary versions), shortened probes, weight multiplier search.
-  Best alternative found: `choice` framing on `laya:en` for features only.
 - The batteries A/B/C (180 cases, verbatim-verbose / terse-intern / conversational-teen)
   were deliberately scrapped; their history remains in git before commit `575fefb`.
 
@@ -76,8 +73,7 @@ feature request goes in; a 1–5 band comes out. Repo: github.com/iamenianc/tria
 
 - The battery is the only measurement set; a real-traffic holdout would give the first
   honest generalisation estimate.
-- Feature band-5 cases still undershoot when written casually (e.g. "or they'll walk"),
-  and the defect side is sensitive to dramatic register — both are model-level limits.
+- The defect side is sensitive to dramatic register — a model-level limit.
 - `d30` (want 1, sum 1.55) and `d01` (want 5, sum 1.79) are inseparable by cuts — the
   surviving two-band defect miss trades against every other cut placement.
 - Ollaya server binary: `C:\Users\ianch\AppData\Local\Programs\Ollaya\bin\ollaya.exe`

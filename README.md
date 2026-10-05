@@ -1,41 +1,35 @@
 # von-triage
 
-Severity triage scorer for the life-insurance quoting platform. A defect report or a
-feature request goes in; a 1–5 severity band comes out.
+Severity triage scorer for the life-insurance quoting platform. A defect report
+goes in; a 1–5 severity band comes out. Feature-request triage is not supported.
 
-## Flows
+## Flow
 
-Two discrete flows, chosen by the caller:
-
-- `defect` — Tranche 1, software bugs and defects
-- `feature` — Tranche 2, new feature requests
+One flow: software bugs and defect reports.
 
 ## Scoring
 
-Each flow asks its branch's 4 severity probes of the local decision model `von`
+The scorer asks its 4 severity probes of the local decision model `von`
 through the Ollaya server. von returns a probability in 0–1 per probe. Each probe
 covers one axis of the severity rubric and is answerable from any writing style,
 terse or verbose.
 
 The 4 probabilities are summed as floats with no rounding, giving a continuous sum
-in 0–4. The exact sum is compared against the band cuts for that flow.
+in 0–4. The exact sum is compared against the band cuts.
 
-Every probe is prefaced with the flow's goal statement — "Your goal is to
-accurately triage user bug reports." (defects) or "…feature requests." (features) —
-which steadies von across writing styles.
+Every probe is prefaced with the goal statement — "Your goal is to
+accurately triage user bug reports." — which steadies von across writing styles.
 
-Probes, per flow (each prefaced as above):
+Probes (each prefaced as above):
 
-- defect — `dmg` (destroys, corrupts, or miscalculates client data, records, or money, or exposes private client information), `block` (stops someone finishing their work or forces redoing it), `client_visible` (happens in front of clients or affects client documents), `all` (meaningfully impacts 100% of the user base)
-- feature — `rev` (not having it loses paying clients or business), `time` (saves a meaningful amount of daily time), `manual` (currently done by hand, in spreadsheets, or with outside tools), `all` (meaningfully impacts 100% of the user base)
+- `dmg` (destroys, corrupts, or miscalculates client data, records, or money, or exposes private client information), `block` (stops someone finishing their work or forces redoing it), `client_visible` (happens in front of clients or affects client documents), `all` (meaningfully impacts 100% of the user base)
 
 Probe wording is load-bearing: von scores each option at its own `[MASK]` marker,
 so the question text *is* the context it reasons over. Do not shorten the probes.
 
-Band cuts, per flow (0–4 sum scale):
+Band cuts (0–4 sum scale):
 
-- defect: ≤ 0.841 → 1, ≤ 1.577 → 2, ≤ 1.77 → 3, ≤ 3.29 → 4, else 5
-- feature: ≤ 0.888 → 1, ≤ 1.05 → 2, ≤ 1.083 → 3, ≤ 2.379 → 4, else 5
+- ≤ 0.841 → 1, ≤ 1.577 → 2, ≤ 1.77 → 3, ≤ 3.372 → 4, else 5
 
 The cuts are fitted under an **asymmetric error cost**: over-rating severity costs
 double what under-rating costs (prefer to under-rate — a too-high band burns
@@ -48,18 +42,17 @@ and must not be outvoted by the softer probes. Battery-verified precision: no ca
 in bands 1–4 reads `dmg` ≥ 0.88 (max 0.87, outdated rate tables), while the one-line
 wrong-money canary reads a stable 0.89:
 
-- defect: `dmg` ≥ 0.88 → band at least 5; `dmg` ≥ 0.70 → band at least 4
-- feature: `rev` ≥ 0.50 **and** `all` ≥ 0.40 → band at least 5
+- `dmg` ≥ 0.88 → band at least 5; `dmg` ≥ 0.70 → band at least 4
 
-Accuracy, cuts fitted on the battery's 61 cases (in-sample): defect 50% exact,
-97% within one band (5 over / 11 under); feature 55% exact, 90% within one band
-(8 over / 5 under). One defect two-band miss remains: `d30` (want 1, sum 1.55) and
-`d01` (want 5, sum 1.79) are 0.24 apart in sum but four bands apart in label, so no
-cut placement removes every two-band error. A full battery run takes about a minute.
+Accuracy, cuts fitted on the battery's 32 cases (in-sample): 50% exact,
+97% within one band (5 over / 11 under). One two-band miss remains: `d30` (want 1,
+sum 1.55) and `d01` (want 5, sum 1.79) are 0.24 apart in sum but four bands apart
+in label, so no cut placement removes every two-band error. A full battery run
+takes about half a minute.
 
 ## What the bands mean
 
-**Defect score (T1)** — how badly the defect hurts the business today.
+**Defect score** — how badly the defect hurts the business today.
 
 - **1/5 — Trivial.** Purely cosmetic; nobody's work is affected (typo in help text, stale favicon).
 - **2/5 — Minor annoyance.** Everything works, just untidy or slightly harder to use (misaligned button, saved cases not sorted newest-first).
@@ -67,23 +60,15 @@ cut placement removes every two-band error. A full battery run takes about a min
 - **4/5 — Serious.** Advisors get stuck or lose meaningful work (validation blocking applications, drafts vanishing, wrong premium tables).
 - **5/5 — Critical.** Money is wrong, data is lost, the system crashes, or documents are non-compliant — hitting many brokers across product lines with no workaround, often in front of clients.
 
-**Feature score (T2)** — how much not having the feature costs the business.
-
-- **1/5 — Novelty.** No workflow value (confetti animation, custom cursor colors).
-- **2/5 — Nice-to-have.** A few users would enjoy it; no one loses anything without it.
-- **3/5 — Convenience.** Saves real time for regular users; often requested, but nothing is lost or won without it.
-- **4/5 — Competitive need.** Competitors have it or complaints are frequent; its absence is visible to the market.
-- **5/5 — Revenue at risk.** Large agencies or carriers are withholding business, or producers are moving to competitors, because it is missing.
-
 Reading the score: the probes ask about substance and consequences, not tone, so an
 understated report of a ledger-corrupting bug still scores 5/5. Adjacent scores mean
-"roughly the same urgency" (within-one-band rate is 97% on defects, 90% on features).
+"roughly the same urgency" (within-one-band rate is 97%).
 
 ## Files
 
 - `von-triage.py` — scorer and per-flow band cuts. Entry point.
 - `von_branches.py` — the probe question sets. Key order and wording are load-bearing; von is option-order sensitive and the questions ask about consequences and magnitude.
-- `battery.py` — the 61-case calibration battery: 32 defect reports, 29 feature requests, written in a standard, objective, unemotional, professional register by a business user.
+- `battery.py` — the 32-case calibration battery: defect reports written in a standard, objective, unemotional, professional register by a business user.
 - `battery_harness.py` — scores the battery, fits the band cuts under the asymmetric error cost, reports accuracy with a per-case breakdown.
 
 ## Requirements
@@ -118,13 +103,13 @@ Windows, macOS and Linux all work; nothing in the repo is OS-specific.
 ## Usage
 
 ```
-python von-triage.py defect  "The quoting engine shows wrong rider costs."
-python von-triage.py feature "Please add split-dollar funding solves."
-echo "text" | python von-triage.py defect
-python von-triage.py -m <model> defect "text"     # default model: von
+python von-triage.py "The quoting engine shows wrong rider costs."
+python von-triage.py defect "text"          (leading 'defect' keyword accepted)
+echo "text" | python von-triage.py
+python von-triage.py -m <model> "text"      # default model: von
 ```
 
-Recalibrate the bands against the battery (61 server calls, about a minute —
+Recalibrate the bands against the battery (32 server calls, about half a minute —
 also refits and reports the optimal cuts under the asymmetric cost):
 
 ```

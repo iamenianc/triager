@@ -18,9 +18,7 @@ RUBRIC = ["no", "yes"]  # noul probes are binary; kept for reference only
 # question itself is load-bearing - von scores options at [MASK], so the probe
 # text IS the context it reasons over. Do not shorten probes.)
 # defect: damage / obstruction / client-facing stakes / universality.
-# feature: revenue / time saved / existing manual effort / universality.
 DEFECT_GOAL = "Your goal is to accurately triage user bug reports. "
-FEATURE_GOAL = "Your goal is to accurately triage feature requests. "
 
 TRIAGE_PROBES = {
     "defect": {
@@ -28,12 +26,6 @@ TRIAGE_PROBES = {
         "block":          DEFECT_GOAL + "Does this problem stop someone from finishing their work, or force them to redo work they already did?",
         "client_visible": DEFECT_GOAL + "Does this problem happen in front of a client, or affect documents or figures that clients see?",
         "all":            DEFECT_GOAL + "Does this issue meaningfully impact 100 percent of the entire user base of the software?",
-    },
-    "feature": {
-        "rev":    FEATURE_GOAL + "Would not having this feature lose the company paying clients, agencies, or business?",
-        "time":   FEATURE_GOAL + "Would this feature save people a meaningful amount of time in their daily work?",
-        "manual": FEATURE_GOAL + "Do people currently do this by hand, in spreadsheets, or with outside tools?",
-        "all":    FEATURE_GOAL + "Does this issue meaningfully impact 100 percent of the entire user base of the software?",
     },
 }
 TRIAGE_INVERTED = set()  # no reversed-polarity probes in the current sets
@@ -75,38 +67,3 @@ DEFECT_QS = {
 
 # reversed polarity: high probability means LESS severe -> contributes (1 - p) to the sum
 DEFECT_INVERTED = {"meeting_wa", "self_resolve"}
-
-FEATURE_QS = {
-    # Group 1: Workflow Efficiency
-    "input_reduce": "Will this enhancement reduce clicks, keystrokes, and redundant data entry?",
-    "turnaround": "Will this automation materially shorten case preparation and submission time?",
-    "bottleneck": "Does this change eliminate a repetitive navigation hurdle in daily work?",
-    # Group 2: Custom Reporting
-    "proposal_clarity": "Does this feature improve the visual readability of complex policy ledgers?",
-    "cobrand": "Does this expand the ability to customize and co-brand illustration summaries?",
-    "comparison": "Does this export feature enable side-by-side product comparisons?",
-    # Group 3: Scenario Modeling
-    "funding_solves": "Does this expand modeling capabilities for concepts like split-dollar funding?",
-    "actuarial_depth": "Does this add solving calculations that are currently missing from the quoting engine?",
-    "projection_custom": "Does this enable custom crediting rate stress tests and withdrawal schedules?",
-    # Group 4: Interface Usability
-    "cognitive_load": "Will this redesign reduce user confusion and training requirements?",
-    "discoverability": "Does this update make nested tools, riders, and modules easier to find?",
-    "ergonomics": "Does this update noticeably improve the daily speed and feel of the platform?",
-    # Group 5: System Integration
-    "agency_sync": "Does this feature enable direct data synchronization with external agency management systems?",
-    "handoff": "Does this eliminate manual handoffs to electronic signature or medical record tools?",
-    "import_export": "Does this automate data imports and exports to remove manual re-entry?",
-    # Group 6: Competitive Parity
-    "feature_parity": "Is this capability required to match standard features in competitor portals?",
-    "standard_gap": "Is the absence of this feature generating frequent broker complaints?",
-    "comp_disadv": "Does competitor support for this capability currently cause lost business?",
-    # Group 7: User Adoption
-    "user_reach": "Will a majority of active brokers regularly use this feature?",
-    "multiline": "Does this feature apply across multiple life insurance product lines?",
-    "volume": "Will this feature be used in a substantial portion of monthly quotes or applications?",
-    # Group 8: Commercial Growth
-    "large_case": "Does this feature directly help brokers design and close larger cases?",
-    "distribution": "Does this capability improve leverage in distribution negotiations with large agencies?",
-    "placement": "Will this feature prevent business from shifting to competitor carriers?",
-}
