@@ -7,8 +7,8 @@ feature request goes in; a 1–5 severity band comes out.
 
 Two discrete flows, chosen by the caller:
 
-- `defect` — Tranche 1, software bugs and defects (24 probes)
-- `feature` — Tranche 2, new feature requests (24 probes)
+- `defect` — Tranche 1, software bugs and defects
+- `feature` — Tranche 2, new feature requests
 
 ## Scoring
 
@@ -34,21 +34,28 @@ so the question text *is* the context it reasons over. Do not shorten the probes
 
 Band cuts, per flow (0–4 sum scale):
 
-- defect: ≤ 0.84 → 1, ≤ 1.22 → 2, ≤ 1.68 → 3, ≤ 2.17 → 4, else 5
-- feature: ≤ 0.80 → 1, ≤ 1.05 → 2, ≤ 1.08 → 3, ≤ 2.38 → 4, else 5
+- defect: ≤ 0.841 → 1, ≤ 1.577 → 2, ≤ 1.77 → 3, ≤ 3.29 → 4, else 5
+- feature: ≤ 0.888 → 1, ≤ 1.05 → 2, ≤ 1.083 → 3, ≤ 2.379 → 4, else 5
+
+The cuts are fitted under an **asymmetric error cost**: over-rating severity costs
+double what under-rating costs (prefer to under-rate — a too-high band burns
+escalation capacity on trivia; a too-low band still surfaces one band later).
+Ties break toward exact hits, then within-1, then the higher band-5 cut.
 
 Damage-dominance rules (applied after the cuts). The damage probe covers wrong
 money, wrong data, lost records, and privacy exposure — the rubric's hard signal —
-and must not be outvoted by the softer probes. A high damage reading never occurs
-on low-severity reports (0/18 cases in bands 1–3 across the batteries), so these
-floors are precision-safe:
+and must not be outvoted by the softer probes. Battery-verified precision: no case
+in bands 1–4 reads `dmg` ≥ 0.88 (max 0.87, outdated rate tables), while the one-line
+wrong-money canary reads a stable 0.89:
 
-- defect: `dmg` ≥ 0.90 → band at least 5; `dmg` ≥ 0.70 → band at least 4
+- defect: `dmg` ≥ 0.88 → band at least 5; `dmg` ≥ 0.70 → band at least 4
 - feature: `rev` ≥ 0.50 **and** `all` ≥ 0.40 → band at least 5
 
-Accuracy, cuts fitted on the battery's 60 cases (in-sample): defect 65% exact,
-87% within one band; feature 55% exact, 90% within one band. A full battery run takes about 2.5
-minutes per battery.
+Accuracy, cuts fitted on the battery's 61 cases (in-sample): defect 50% exact,
+97% within one band (5 over / 11 under); feature 55% exact, 90% within one band
+(8 over / 5 under). One defect two-band miss remains: `d30` (want 1, sum 1.55) and
+`d01` (want 5, sum 1.79) are 0.24 apart in sum but four bands apart in label, so no
+cut placement removes every two-band error. A full battery run takes about a minute.
 
 ## What the bands mean
 
@@ -69,18 +76,15 @@ minutes per battery.
 - **5/5 — Revenue at risk.** Large agencies or carriers are withholding business, or producers are moving to competitors, because it is missing.
 
 Reading the score: the probes ask about substance and consequences, not tone, so an
-understated report of a ledger-corrupting bug still scores 5/5. Known leak: heavily
-alarmist wording on a trivial bug can inflate the score by up to two bands (one
-battery case). Adjacent scores mean "roughly the same urgency" (within-one-band
-rate is 94% on defects, 100% on features).
+understated report of a ledger-corrupting bug still scores 5/5. Adjacent scores mean
+"roughly the same urgency" (within-one-band rate is 97% on defects, 90% on features).
 
 ## Files
 
 - `von-triage.py` — scorer and per-flow band cuts. Entry point.
-- `von_branches.py` — the probe question sets (3 in use per flow, full sets retained). Key order and wording are load-bearing; von is option-order sensitive and the questions ask about consequences and magnitude.
-- `von_battery.py` — 60-case calibration battery (31 defects, 29 features) with expected bands.
-- `battery.py` — the 60-case calibration battery: 31 defect reports, 29 feature requests, written in a standard, objective, unemotional, professional register by a business user.
-- `battery_harness.py` — scores the battery, fits the band cuts and damage rules, reports accuracy with a per-case breakdown.
+- `von_branches.py` — the probe question sets. Key order and wording are load-bearing; von is option-order sensitive and the questions ask about consequences and magnitude.
+- `battery.py` — the 61-case calibration battery: 32 defect reports, 29 feature requests, written in a standard, objective, unemotional, professional register by a business user.
+- `battery_harness.py` — scores the battery, fits the band cuts under the asymmetric error cost, reports accuracy with a per-case breakdown.
 
 ## Requirements
 
@@ -89,7 +93,7 @@ rate is 94% on defects, 100% on features).
   `http://localhost:11435`
 - The `von` model: ModernBERT-large, ONNX, 395M parameters (F32), 1.48 GiB
 - ~2–3 GB free RAM while the model is resident; ordinary multi-core CPU, no GPU
-  (24 probes take about 3–4 seconds on CPU)
+  (the 4 probes take about 1 second on CPU)
 
 ## Deployment on a new machine
 
@@ -120,8 +124,8 @@ echo "text" | python von-triage.py defect
 python von-triage.py -m <model> defect "text"     # default model: von
 ```
 
-Recalibrate the bands against the battery (60 server calls, about 40 seconds —
-also refits and reports the optimal cuts):
+Recalibrate the bands against the battery (61 server calls, about a minute —
+also refits and reports the optimal cuts under the asymmetric cost):
 
 ```
 python battery_harness.py

@@ -5,7 +5,7 @@ Two DISCRETE flows, chosen by the caller (no router - Ian's call):
   python von-triage.py defect  "<text>"    -> Tranche 1: software bugs & defects
   python von-triage.py feature "<text>"    -> Tranche 2: new feature requests
 
-Each flow asks its branch's 3 severity probes (from von_branches.py TRIAGE_PROBES):
+Each flow asks its branch's 4 severity probes (from von_branches.py TRIAGE_PROBES):
   defect : dmg (destroys/corrupts/miscalculates data or money),
            block (stops work or forces redo),
            client_visible (happens in front of clients or affects client documents),
@@ -25,12 +25,13 @@ probabilities from the sum.
 No regex stripping, no steering clause: the questions ask about consequences and
 magnitude, not tone. Question wording is load-bearing; keep von_branches.py stable.
 
-Band calibration (two 60-case batteries, one verbose professional style and one
-terse intern style; cuts fitted by brute-force threshold search on the combined
-120 cases; the two tranches have different sum distributions, so each gets its
-own cuts). Accuracy on the 60-case battery (business-user register, cuts fitted on the same
-cases, so in-sample): defect 65% exact, 87% within 1; feature 52% exact,
-90% within 1. A one-band error is acceptable in triage. The damage rules
+Band calibration: cuts are fitted by brute-force threshold search on the 61-case
+battery under an ASYMMETRIC error cost - over-rating severity costs double what
+under-rating costs (Ian's policy: prefer to under-rate; a too-high band burns
+escalation capacity on trivia, a too-low band still surfaces one band later).
+Accuracy on the battery (in-sample - it is both fitting set and only measurement):
+defect 50% exact, 97% within 1 (5 over / 11 under); feature 55% exact, 90% within 1
+(8 over / 5 under). A one-band error is acceptable in triage. The damage rules
 guarantee that wrong money, wrong data, or privacy exposure lands at least 4
 and usually 5, even in short single-signal reports.
 
@@ -50,22 +51,22 @@ URL = "http://localhost:11435/api/decide"
 
 MODEL = "von"  # override with -m/--model
 
-# The 3 probes per flow, in fixed order (von is option-order sensitive).
+# The 4 probes per flow, in fixed order (von is option-order sensitive).
 PROBES = {flow: list(qs.keys()) for flow, qs in TRIAGE_PROBES.items()}
 
-# Per-flow band cuts on the 0-4 float sum (fitted by brute-force threshold search
-# on the combined 120 cases of batteries A and B; strictly increasing so every
-# band is reachable).
+# Per-flow band cuts on the 0-4 float sum (fitted by battery_harness.py under the
+# asymmetric error cost; strictly increasing so every band is reachable).
 SUM_BANDS = {
-    "defect":  [(0.84, 1), (1.22, 2), (1.68, 3), (2.17, 4), (999, 5)],
-    "feature": [(0.80, 1), (1.05, 2), (1.08, 3), (2.38, 4), (999, 5)],
+    "defect":  [(0.841, 1), (1.577, 2), (1.77, 3), (3.29, 4), (999, 5)],
+    "feature": [(0.888, 1), (1.05, 2), (1.083, 3), (2.379, 4), (999, 5)],
 }
 
 # Dominance rules: the damage probe (wrong money / wrong data / privacy exposure)
-# is the rubric's hard signal and must not be outvoted by the softer probes. A high
-# damage reading never occurs on low-severity reports (0/18 cases in bands 1-3 on
-# the batteries), so flooring on it is precision-safe.
-DMG_FLOOR5 = 0.90
+# is the rubric's hard signal and must not be outvoted by the softer probes.
+# Battery-verified precision: no case in bands 1-4 reads dmg >= 0.88 (max is 0.87,
+# outdated rate tables), while the one-line wrong-money canary reads a stable 0.89 -
+# so the floor-5 sits at 0.88 to keep the canary at 5 under the band-5 cut of 3.29.
+DMG_FLOOR5 = 0.88
 DMG_FLOOR4 = 0.70
 REV_FLOOR5, ALL_FLOOR5 = 0.50, 0.40
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""battery.py - the calibration battery: 60 cases written in a standard,
+"""battery.py - the calibration battery: 61 cases written in a standard,
 objective, unemotional, professional register by a business user (advisor,
 operations or agency staff), not by the IT team.
 
-Structure: 31 defect reports, 29 feature requests, spread across the five bands.
+Structure: 32 defect reports, 29 feature requests, spread across the five bands.
 Expected bands are triage intuitions, not labels the scorer sees.
 
-Run:  python battery_harness.py   (scores all 60, fits cuts, reports accuracy)
+Run:  python battery_harness.py   (scores all 61, fits cuts, reports accuracy)
 """
 import os
 
@@ -26,6 +26,7 @@ CASES = [
  ("d11 tobacco rates outdated", 4, "Quoting results for tobacco-rated cases do not reflect the carrier rate tables published on 1 September. Quotes produced since that date require review."),
  ("d12 drafts not retained", 4, "Draft applications are not being retained. Advisors report repeated loss of entered work and have begun maintaining paper records."),
  ("d13 session ends on case switch", 4, "Switching between open cases ends the session. Work in progress on the previous case is not recoverable."),
+ ("d32 claim advice fails on long fields", 4, "Under Member's Information, Claim -> Enter Disablement Date (e.g., 11/09/2026). This process will fail if one of the fields is over 255 characters long, as confirmed by Rock. Please use the 2 below members as examples: Member 644455 under Akamai Technologies Netherlands B.V. Australian Branch (Group ID 485) Member 659266 under Cloudera (Aust) Pty Ltd (Group ID 2059) Both examples have very long UW decision that is causing the whole document to fail to generate."),
  # ---------------- defects: band 3 ----------------
  ("d14 export takes two minutes", 3, "Policy illustration exports take approximately two minutes to generate. This is slower than previously observed, although the export completes."),
  ("d15 partial search fails", 3, "Client search does not return matches for partial surnames. Users must enter the full name or reference number to locate a record."),

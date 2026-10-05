@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
-"""battery_harness.py - score the 60-case battery with the live probes, fit the
-per-flow band cuts (and the damage-dominance rules), and report accuracy.
+"""battery_harness.py - score the battery with the live probes, fit the per-flow
+band cuts under an asymmetric error cost, and report accuracy.
+
+Cuts are fitted to minimise total error cost, where over-rating severity costs
+double what under-rating costs (a too-high band burns escalation capacity on
+trivia; a too-low band still surfaces one band later). Ties break toward exact
+hits, then within-1, then the higher band-5 cut: prefer to under-rate.
 
 The battery is both the fitting set and the only measurement we have, so the
 reported accuracy is in-sample. Treat it as a calibration report, not a
 generalisation estimate.
 
-Run:  python battery_harness.py   (~1 min, 60 server calls)
+Run:  python battery_harness.py   (~1 min, one server call per case)
 """
 import json, time, urllib.request, os
 
@@ -43,6 +48,18 @@ def band_of(v, cuts):
     return 1 if v <= cuts[0] else 2 if v <= cuts[1] else 3 if v <= cuts[2] else 4 if v <= cuts[3] else 5
 
 
+# Asymmetric error cost: over-rating severity is worse than under-rating.
+OVER_COST = {1: 2.0, 2: 6.0}    # scored 1 band too high / 2+ bands too high
+UNDER_COST = {1: 1.0, 2: 3.0}   # scored 1 band too low / 2+ bands too low
+
+
+def err_cost(got, want):
+    d = got - want
+    if d == 0:
+        return 0.0
+    return (OVER_COST if d > 0 else UNDER_COST)[min(abs(d), 2)]
+
+
 def refit(sub, flow):
     totals = sorted(set(round(r["total"], 3) for r in sub))
     mids = sorted(set(round((totals[i] + totals[i+1]) / 2, 3) for i in range(len(totals)-1)))
@@ -51,13 +68,17 @@ def refit(sub, flow):
         for c2 in [m for m in mids if m > c1]:
             for c3 in [m for m in mids if m > c2]:
                 for c4 in [m for m in mids if m > c3]:
-                    ex = wi = 0
+                    cost = ex = wi = 0
                     for r in sub:
                         g = apply_rules(flow, r["probs"], band_of(r["total"], (c1, c2, c3, c4)))
+                        cost += err_cost(g, r["want"])
                         ex += 1 if g == r["want"] else 0
                         wi += 1 if abs(g - r["want"]) <= 1 else 0
-                    if best is None or (ex, wi) > (best[0][0], best[0][1]):
-                        best = ((ex, wi), (c1, c2, c3, c4))
+                    # minimise cost; ties break toward exact, within-1, then the
+                    # higher band-5 cut (prefer to under-rate)
+                    key = (round(cost, 6), -ex, -wi, -c4)
+                    if best is None or key < best[0]:
+                        best = (key, (c1, c2, c3, c4))
     assert best is not None
     return best
 
@@ -80,10 +101,13 @@ def main():
 
     for flow in ("defect", "feature"):
         sub = [r for r in results if r["flow"] == flow]
-        (ex, wi), cuts = refit(sub, flow)
-        print(f"\n== {flow} ({len(sub)} cases): cuts {cuts} -> exact {ex}/{len(sub)} ({100*ex/len(sub):.0f}%), within1 {wi}/{len(sub)} ({100*wi/len(sub):.0f}%)")
-        for r in sub:
-            g = apply_rules(flow, r["probs"], band_of(r["total"], cuts))
+        (cost, nex, nwi, _), cuts = refit(sub, flow)
+        ex, wi = -nex, -nwi
+        scored = [(r, apply_rules(flow, r["probs"], band_of(r["total"], cuts))) for r in sub]
+        over = sum(1 for r, g in scored if g > r["want"])
+        under = sum(1 for r, g in scored if g < r["want"])
+        print(f"\n== {flow} ({len(sub)} cases): cuts {cuts} -> exact {ex}/{len(sub)} ({100*ex/len(sub):.0f}%), within1 {wi}/{len(sub)} ({100*wi/len(sub):.0f}%), cost {cost:.1f}, over {over} / under {under}")
+        for r, g in scored:
             mark = "OK " if g == r["want"] else "~  " if abs(g - r["want"]) <= 1 else "X  "
             print(f"   {mark} {r['name']:32} want{r['want']} got{g} sum={r['total']:.2f}")
         import statistics

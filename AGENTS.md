@@ -17,18 +17,23 @@ feature request goes in; a 1–5 band comes out. Repo: github.com/iamenianc/tria
     `all` (meaningfully impacts 100% of the user base)
   - feature: `rev` (not having it loses paying clients/business), `time` (saves meaningful daily time),
     `manual` (currently done by hand / spreadsheets / outside tools), `all` (same 100% question)
-- Probes summed as floats, no rounding (0–4 scale), matched to per-flow cuts:
-  - defect: ≤0.84 → 1, ≤1.22 → 2, ≤1.68 → 3, ≤2.17 → 4, else 5
-  - feature: ≤0.80 → 1, ≤1.05 → 2, ≤1.08 → 3, ≤2.38 → 4, else 5
+- Probes summed as floats, no rounding (0–4 scale), matched to per-flow cuts fitted
+  under an ASYMMETRIC error cost (over-rating costs double under-rating; Ian's policy:
+  prefer to under-rate). Ties break toward exact, within-1, then the higher band-5 cut:
+  - defect: ≤0.841 → 1, ≤1.577 → 2, ≤1.77 → 3, ≤3.29 → 4, else 5
+  - feature: ≤0.888 → 1, ≤1.05 → 2, ≤1.083 → 3, ≤2.379 → 4, else 5
 - Damage-dominance rules, applied after the cuts (the rubric's hard signal must not be
-  outvoted by softer probes; a high damage reading never occurs in bands 1–3):
-  - defect: `dmg` ≥ 0.90 → at least 5; `dmg` ≥ 0.70 → at least 4
+  outvoted by softer probes; no battery case in bands 1–4 reads dmg ≥ 0.88, max 0.87):
+  - defect: `dmg` ≥ 0.88 → at least 5; `dmg` ≥ 0.70 → at least 4
   - feature: `rev` ≥ 0.50 and `all` ≥ 0.40 → at least 5
-- Battery: `battery.py` — 60 cases (31 defect / 29 feature, 12 per band), written in a
+- Battery: `battery.py` — 61 cases (32 defect / 29 feature), written in a
   standard, objective, unemotional, professional business-user register.
-  `battery_harness.py` scores it (~40 s), refits cuts + rules, prints per-case results
-  and probe discrimination. Last run: defect 65% exact / 87% within-1; feature 55% / 90%
-  (in-sample — this is the only battery, so treat as calibration, not generalisation).
+  `battery_harness.py` scores it (~60 s), refits cuts under the asymmetric cost, prints
+  per-case results and probe discrimination. Last run: defect 50% exact / 97% within-1
+  (5 over / 11 under); feature 55% / 90% (8 over / 5 under) — in-sample, this is the
+  only battery, so treat as calibration, not generalisation. The band-5 cut of 3.29
+  puts several true-5 defects at 4 — accepted under the prefer-under-rate policy;
+  wrong money still reaches 5 via the `dmg` ≥ 0.88 floor.
 
 ## Rules learned the hard way (do not relitigate without new data)
 
@@ -40,8 +45,9 @@ feature request goes in; a 1–5 band comes out. Repo: github.com/iamenianc/tria
   gate is therefore not available for probe-based scoring.
 - **Weight multipliers don't generalise.** Fitting per-probe weights improved the fitting
   set but not the holdout — the cuts absorb a reweight. Dominance *rules* work; weights don't.
-- **Register matters more than anything else tested.** The same scorer reads ~65%/87% on
-  the professional battery and read ~42%/71% on a scrapped casual/teen-style set.
+- **Register matters more than anything else tested.** The same scorer reads 50%/97% on
+  the professional battery under the current asymmetric cuts (65%/87% under the old
+  symmetric fit) and read ~42%/71% on a scrapped casual/teen-style set.
   von reads dramatic tone as severity (a footer typo in alarmist register scored 5/5) and
   understatement as low severity.
 - Framings tested and rejected (all lost to the plain 4-probe scorer): single `score`
@@ -61,6 +67,8 @@ feature request goes in; a 1–5 band comes out. Repo: github.com/iamenianc/tria
 - README is canonical current-state only: no history, no rejected approaches.
 - After any probe/wording/cut change: run `battery_harness.py`, update `SUM_BANDS` in
   `von-triage.py`, the docstring accuracy line, and the README, then commit and push.
+  Cuts are always refitted under the asymmetric cost; re-check the wrong-money canary
+  (must score 5/5 — currently via the `dmg` ≥ 0.88 floor, not the sum).
 - Verify server state directly (`/api/tags`, `/v1/models`) rather than assuming which
   models are loaded.
 
@@ -70,5 +78,7 @@ feature request goes in; a 1–5 band comes out. Repo: github.com/iamenianc/tria
   honest generalisation estimate.
 - Feature band-5 cases still undershoot when written casually (e.g. "or they'll walk"),
   and the defect side is sensitive to dramatic register — both are model-level limits.
+- `d30` (want 1, sum 1.55) and `d01` (want 5, sum 1.79) are inseparable by cuts — the
+  surviving two-band defect miss trades against every other cut placement.
 - Ollaya server binary: `C:\Users\ianch\AppData\Local\Programs\Ollaya\bin\ollaya.exe`
   (`pull` / `run` / `list` / `show`); models: `von:latest`, `laya:en`, `laya:multilingual`.
