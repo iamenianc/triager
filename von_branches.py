@@ -12,22 +12,28 @@ Keep key order stable: von is option-order sensitive.
 
 RUBRIC = ["no", "yes"]  # noul probes are binary; kept for reference only
 
-# ---- 3-probe triage sets (von-triage.py) ----
-# Designed to be answerable from any writing style, terse or verbose: each probe
-# covers one axis of the severity rubric. defect: damage / obstruction /
-# client-facing stakes. feature: revenue / time saved / existing manual effort.
+# ---- 4-probe triage sets (von-triage.py) ----
+# Each probe covers one axis of the severity rubric and is prefaced with the
+# flow's goal statement (steadies von across writing styles; the wording of the
+# question itself is load-bearing - von scores options at [MASK], so the probe
+# text IS the context it reasons over. Do not shorten probes.)
+# defect: damage / obstruction / client-facing stakes / universality.
+# feature: revenue / time saved / existing manual effort / universality.
+DEFECT_GOAL = "Your goal is to accurately triage user bug reports. "
+FEATURE_GOAL = "Your goal is to accurately triage feature requests. "
+
 TRIAGE_PROBES = {
     "defect": {
-        "dmg":            "Does this problem destroy, corrupt, or miscalculate any client data, saved records, or money figures?",
-        "block":          "Does this problem stop someone from finishing their work, or force them to redo work they already did?",
-        "client_visible": "Does this problem happen in front of a client, or affect documents or figures that clients see?",
-        "all":            "Does this issue meaningfully impact 100 percent of the entire user base of the software?",
+        "dmg":            DEFECT_GOAL + "Does this problem destroy, corrupt, or miscalculate any client data, saved records, or money figures?",
+        "block":          DEFECT_GOAL + "Does this problem stop someone from finishing their work, or force them to redo work they already did?",
+        "client_visible": DEFECT_GOAL + "Does this problem happen in front of a client, or affect documents or figures that clients see?",
+        "all":            DEFECT_GOAL + "Does this issue meaningfully impact 100 percent of the entire user base of the software?",
     },
     "feature": {
-        "rev":    "Would not having this feature lose the company paying clients, agencies, or business?",
-        "time":   "Would this feature save people a meaningful amount of time in their daily work?",
-        "manual": "Do people currently do this by hand, in spreadsheets, or with outside tools?",
-        "all":    "Does this issue meaningfully impact 100 percent of the entire user base of the software?",
+        "rev":    FEATURE_GOAL + "Would not having this feature lose the company paying clients, agencies, or business?",
+        "time":   FEATURE_GOAL + "Would this feature save people a meaningful amount of time in their daily work?",
+        "manual": FEATURE_GOAL + "Do people currently do this by hand, in spreadsheets, or with outside tools?",
+        "all":    FEATURE_GOAL + "Does this issue meaningfully impact 100 percent of the entire user base of the software?",
     },
 }
 TRIAGE_INVERTED = set()  # no reversed-polarity probes in the current sets

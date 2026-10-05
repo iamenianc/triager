@@ -20,20 +20,28 @@ terse or verbose.
 The 4 probabilities are summed as floats with no rounding, giving a continuous sum
 in 0–4. The exact sum is compared against the band cuts for that flow.
 
-Probes, per flow:
+Every probe is prefaced with the flow's goal statement — "Your goal is to
+accurately triage user bug reports." (defects) or "…feature requests." (features) —
+which steadies von across writing styles.
+
+Probes, per flow (each prefaced as above):
 
 - defect — `dmg` (destroys, corrupts, or miscalculates client data, records, or money), `block` (stops someone finishing their work or forces redoing it), `client_visible` (happens in front of clients or affects client documents), `all` (meaningfully impacts 100% of the user base)
 - feature — `rev` (not having it loses paying clients or business), `time` (saves a meaningful amount of daily time), `manual` (currently done by hand, in spreadsheets, or with outside tools), `all` (meaningfully impacts 100% of the user base)
 
+Probe wording is load-bearing: von scores each option at its own `[MASK]` marker,
+so the question text *is* the context it reasons over. Do not shorten the probes.
+
 Band cuts, per flow (0–4 sum scale):
 
-- defect: ≤ 0.84 → 1, ≤ 1.14 → 2, ≤ 1.50 → 3, ≤ 2.27 → 4, else 5
-- feature: ≤ 0.78 → 1, ≤ 1.07 → 2, ≤ 1.78 → 3, ≤ 2.65 → 4, else 5
+- defect: ≤ 1.11 → 1, ≤ 1.94 → 2, ≤ 2.45 → 3, ≤ 2.86 → 4, else 5
+- feature: ≤ 0.90 → 1, ≤ 1.10 → 2, ≤ 1.69 → 3, ≤ 1.76 → 4, else 5
 
-Accuracy on the two 60-case batteries combined (120 cases: one verbose
-professional style, one terse intern style): defect 61% exact, 82% within one
-band; feature 52% exact, 81% within one band. A full battery run takes about
-75 seconds.
+Accuracy, cuts fitted on batteries A+B (120 cases): defect 52% exact, 92% within
+one band; feature 50% exact, 68% within one band. On battery C (60 unseen
+conversational cases) as a holdout: defect 39% exact, 81% within one band;
+feature 45% exact, 79% within one band. A full battery run takes about 2.5
+minutes per battery.
 
 ## What the bands mean
 

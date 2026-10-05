@@ -28,8 +28,11 @@ magnitude, not tone. Question wording is load-bearing; keep von_branches.py stab
 Band calibration (two 60-case batteries, one verbose professional style and one
 terse intern style; cuts fitted by brute-force threshold search on the combined
 120 cases; the two tranches have different sum distributions, so each gets its
-own cuts). Accuracy on the combined set: defect 61% exact, 82% within 1;
-feature 52% exact, 81% within 1 (a one-band error is acceptable in triage).
+own cuts). Accuracy on the combined A+B fit set (with the goal prefix): defect 52% exact,
+92% within 1; feature 50% exact, 68% within 1. On battery C (unseen style)
+as a holdout: defect 39% exact, 81% within 1; feature 45% exact, 79% within 1.
+A one-band error is acceptable in triage; the goal prefix trades peak accuracy
+on formal prose for steadier results on casual writing styles.
 
 Usage:
     python von-triage.py defect  "The quoting engine shows wrong rider costs."
@@ -54,8 +57,8 @@ PROBES = {flow: list(qs.keys()) for flow, qs in TRIAGE_PROBES.items()}
 # on the combined 120 cases of batteries A and B; strictly increasing so every
 # band is reachable).
 SUM_BANDS = {
-    "defect":  [(0.84, 1), (1.14, 2), (1.50, 3), (2.27, 4), (999, 5)],
-    "feature": [(0.78, 1), (1.07, 2), (1.78, 3), (2.65, 4), (999, 5)],
+    "defect":  [(1.11, 1), (1.94, 2), (2.45, 3), (2.86, 4), (999, 5)],
+    "feature": [(0.90, 1), (1.10, 2), (1.69, 3), (1.76, 4), (999, 5)],
 }
 
 
