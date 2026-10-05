@@ -34,8 +34,8 @@ so the question text *is* the context it reasons over. Do not shorten the probes
 
 Band cuts, per flow (0–4 sum scale):
 
-- defect: ≤ 1.09 → 1, ≤ 1.90 → 2, ≤ 2.35 → 3, ≤ 2.85 → 4, else 5
-- feature: ≤ 0.90 → 1, ≤ 1.10 → 2, ≤ 1.69 → 3, ≤ 1.76 → 4, else 5
+- defect: ≤ 0.84 → 1, ≤ 1.22 → 2, ≤ 1.68 → 3, ≤ 2.17 → 4, else 5
+- feature: ≤ 0.80 → 1, ≤ 1.05 → 2, ≤ 1.08 → 3, ≤ 2.38 → 4, else 5
 
 Damage-dominance rules (applied after the cuts). The damage probe covers wrong
 money, wrong data, lost records, and privacy exposure — the rubric's hard signal —
@@ -44,12 +44,10 @@ on low-severity reports (0/18 cases in bands 1–3 across the batteries), so the
 floors are precision-safe:
 
 - defect: `dmg` ≥ 0.90 → band at least 5; `dmg` ≥ 0.70 → band at least 4
-- feature: `rev` ≥ 0.60 **and** `all` ≥ 0.50 → band at least 5
+- feature: `rev` ≥ 0.50 **and** `all` ≥ 0.40 → band at least 5
 
-Accuracy, cuts fitted on batteries A+B (120 cases): defect 53% exact, 93% within
-one band; feature 50% exact, 68% within one band. On battery C (60 unseen
-conversational cases) as a holdout: defect 39% exact, 81% within one band;
-feature 45% exact, 79% within one band. A full battery run takes about 2.5
+Accuracy, cuts fitted on the battery's 60 cases (in-sample): defect 65% exact,
+87% within one band; feature 55% exact, 90% within one band. A full battery run takes about 2.5
 minutes per battery.
 
 ## What the bands mean
@@ -81,7 +79,8 @@ rate is 94% on defects, 100% on features).
 - `von-triage.py` — scorer and per-flow band cuts. Entry point.
 - `von_branches.py` — the probe question sets (3 in use per flow, full sets retained). Key order and wording are load-bearing; von is option-order sensitive and the questions ask about consequences and magnitude.
 - `von_battery.py` — 60-case calibration battery (31 defects, 29 features) with expected bands.
-- `battery_triple.py` — battery harness for the scorer: runs both batteries (120 cases), evaluates current cuts, refits cuts.
+- `battery.py` — the 60-case calibration battery: 31 defect reports, 29 feature requests, written in a standard, objective, unemotional, professional register by a business user.
+- `battery_harness.py` — scores the battery, fits the band cuts and damage rules, reports accuracy with a per-case breakdown.
 
 ## Requirements
 
@@ -121,9 +120,9 @@ echo "text" | python von-triage.py defect
 python von-triage.py -m <model> defect "text"     # default model: von
 ```
 
-Recalibrate the bands against the battery (60 server calls, about 30 seconds —
+Recalibrate the bands against the battery (60 server calls, about 40 seconds —
 also refits and reports the optimal cuts):
 
 ```
-python battery_triple.py
+python battery_harness.py
 ```

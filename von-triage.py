@@ -28,13 +28,11 @@ magnitude, not tone. Question wording is load-bearing; keep von_branches.py stab
 Band calibration (two 60-case batteries, one verbose professional style and one
 terse intern style; cuts fitted by brute-force threshold search on the combined
 120 cases; the two tranches have different sum distributions, so each gets its
-own cuts). Accuracy on the combined A+B fit set (goal prefix + damage rules): defect 53%
-exact, 93% within 1; feature 50% exact, 68% within 1. On battery C (unseen
-conversational style) as a holdout: defect 39% exact, 81% within 1; feature
-45% exact, 79% within 1. A one-band error is acceptable in triage; the goal
-prefix trades peak accuracy on formal prose for steadier results on casual
-writing styles, and the damage rules guarantee wrong money/data/privacy lands
-at least 4 and usually 5 even in terse single-signal reports.
+own cuts). Accuracy on the 60-case battery (business-user register, cuts fitted on the same
+cases, so in-sample): defect 65% exact, 87% within 1; feature 52% exact,
+90% within 1. A one-band error is acceptable in triage. The damage rules
+guarantee that wrong money, wrong data, or privacy exposure lands at least 4
+and usually 5, even in short single-signal reports.
 
 Usage:
     python von-triage.py defect  "The quoting engine shows wrong rider costs."
@@ -59,8 +57,8 @@ PROBES = {flow: list(qs.keys()) for flow, qs in TRIAGE_PROBES.items()}
 # on the combined 120 cases of batteries A and B; strictly increasing so every
 # band is reachable).
 SUM_BANDS = {
-    "defect":  [(1.09, 1), (1.90, 2), (2.35, 3), (2.85, 4), (999, 5)],
-    "feature": [(0.90, 1), (1.10, 2), (1.69, 3), (1.76, 4), (999, 5)],
+    "defect":  [(0.84, 1), (1.22, 2), (1.68, 3), (2.17, 4), (999, 5)],
+    "feature": [(0.80, 1), (1.05, 2), (1.08, 3), (2.38, 4), (999, 5)],
 }
 
 # Dominance rules: the damage probe (wrong money / wrong data / privacy exposure)
@@ -69,7 +67,7 @@ SUM_BANDS = {
 # the batteries), so flooring on it is precision-safe.
 DMG_FLOOR5 = 0.90
 DMG_FLOOR4 = 0.70
-REV_FLOOR5, ALL_FLOOR5 = 0.60, 0.50
+REV_FLOOR5, ALL_FLOOR5 = 0.50, 0.40
 
 
 def post(state, questions):
