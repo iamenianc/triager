@@ -3,7 +3,7 @@
 Severity triage scorer for a life-insurance quoting platform. A defect report
 goes in; a 1–5 band comes out. Feature-request triage is deprecated; the focus
 is purely bugs/defects. Repo: github.com/iamenianc/triager
-(local: C:\Users\ianch\Hermes\Files\von-triage).
+(local: C:\Users\ianch\sourcecode\repos\von-triage).
 
 ## Current production config
 
