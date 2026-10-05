@@ -26,7 +26,7 @@ which steadies von across writing styles.
 
 Probes, per flow (each prefaced as above):
 
-- defect — `dmg` (destroys, corrupts, or miscalculates client data, records, or money), `block` (stops someone finishing their work or forces redoing it), `client_visible` (happens in front of clients or affects client documents), `all` (meaningfully impacts 100% of the user base)
+- defect — `dmg` (destroys, corrupts, or miscalculates client data, records, or money, or exposes private client information), `block` (stops someone finishing their work or forces redoing it), `client_visible` (happens in front of clients or affects client documents), `all` (meaningfully impacts 100% of the user base)
 - feature — `rev` (not having it loses paying clients or business), `time` (saves a meaningful amount of daily time), `manual` (currently done by hand, in spreadsheets, or with outside tools), `all` (meaningfully impacts 100% of the user base)
 
 Probe wording is load-bearing: von scores each option at its own `[MASK]` marker,
@@ -34,10 +34,19 @@ so the question text *is* the context it reasons over. Do not shorten the probes
 
 Band cuts, per flow (0–4 sum scale):
 
-- defect: ≤ 1.11 → 1, ≤ 1.94 → 2, ≤ 2.45 → 3, ≤ 2.86 → 4, else 5
+- defect: ≤ 1.09 → 1, ≤ 1.90 → 2, ≤ 2.35 → 3, ≤ 2.85 → 4, else 5
 - feature: ≤ 0.90 → 1, ≤ 1.10 → 2, ≤ 1.69 → 3, ≤ 1.76 → 4, else 5
 
-Accuracy, cuts fitted on batteries A+B (120 cases): defect 52% exact, 92% within
+Damage-dominance rules (applied after the cuts). The damage probe covers wrong
+money, wrong data, lost records, and privacy exposure — the rubric's hard signal —
+and must not be outvoted by the softer probes. A high damage reading never occurs
+on low-severity reports (0/18 cases in bands 1–3 across the batteries), so these
+floors are precision-safe:
+
+- defect: `dmg` ≥ 0.90 → band at least 5; `dmg` ≥ 0.70 → band at least 4
+- feature: `rev` ≥ 0.60 **and** `all` ≥ 0.50 → band at least 5
+
+Accuracy, cuts fitted on batteries A+B (120 cases): defect 53% exact, 93% within
 one band; feature 50% exact, 68% within one band. On battery C (60 unseen
 conversational cases) as a holdout: defect 39% exact, 81% within one band;
 feature 45% exact, 79% within one band. A full battery run takes about 2.5

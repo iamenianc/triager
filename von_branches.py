@@ -24,7 +24,7 @@ FEATURE_GOAL = "Your goal is to accurately triage feature requests. "
 
 TRIAGE_PROBES = {
     "defect": {
-        "dmg":            DEFECT_GOAL + "Does this problem destroy, corrupt, or miscalculate any client data, saved records, or money figures?",
+        "dmg":            DEFECT_GOAL + "Does this problem destroy, corrupt, or miscalculate any client data, saved records, or money figures, or expose private client information?",
         "block":          DEFECT_GOAL + "Does this problem stop someone from finishing their work, or force them to redo work they already did?",
         "client_visible": DEFECT_GOAL + "Does this problem happen in front of a client, or affect documents or figures that clients see?",
         "all":            DEFECT_GOAL + "Does this issue meaningfully impact 100 percent of the entire user base of the software?",
