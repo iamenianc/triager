@@ -10,7 +10,10 @@ is purely bugs/defects. Repo: github.com/iamenianc/triager
 - Model: `von` (von 1.1, ModernBERT-large, ONNX, 395M params) served by Ollaya on
   `http://localhost:11435` — endpoint `/api/decide`, question types `noul` / `score` / `choice`.
   Other checkpoint available: `laya:en`, `laya:multilingual` (Laya, from Convai; 683–853 MB).
-- Scorer: `von-triage.py` (CLI: `python von-triage.py defect|feature "<text>"`, `-m <model>` to override).
+- Scorer: `von-triage.py` (CLI: `python von-triage.py "<text>"`, `-m <model>` to override).
+  Double-click entry: desktop shortcut "Triage Defect" → `launch.bat` → `launch.py`
+  (interactive paste loop; auto-starts Ollaya with von; scores via von-triage.py
+  loaded at runtime).
 - Four probes, each prefaced with the goal statement
   (`"Your goal is to accurately triage user bug reports. "`):
   `dmg` (destroy/corrupt/miscalculate data, records, money, or expose private client information),

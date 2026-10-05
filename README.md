@@ -66,7 +66,8 @@ understated report of a ledger-corrupting bug still scores 5/5. Adjacent scores 
 
 ## Files
 
-- `von-triage.py` — scorer and per-flow band cuts. Entry point.
+- `von-triage.py` — scorer and band cuts. Entry point.
+- `launch.py` / `launch.bat` — double-click launcher: interactive paste-and-score loop; starts Ollaya with `von` if down; scores through `von-triage.py` at runtime. Desktop shortcut "Triage Defect" points at `launch.bat`.
 - `von_branches.py` — the probe question sets. Key order and wording are load-bearing; von is option-order sensitive and the questions ask about consequences and magnitude.
 - `battery.py` — the 32-case calibration battery: defect reports written in a standard, objective, unemotional, professional register by a business user.
 - `battery_harness.py` — scores the battery, fits the band cuts under the asymmetric error cost, reports accuracy with a per-case breakdown.
@@ -101,6 +102,10 @@ Component footprint (the model is 95% of the total):
 Windows, macOS and Linux all work; nothing in the repo is OS-specific.
 
 ## Usage
+
+Double-click **Triage Defect** (desktop shortcut → `launch.bat`): paste a defect
+report, press Enter on an empty line, get the band. The launcher starts the
+Ollaya server with `von` if it is not already running.
 
 ```
 python von-triage.py "The quoting engine shows wrong rider costs."
