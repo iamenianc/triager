@@ -61,7 +61,9 @@ takes about half a minute.
 - **5/5 — Critical.** Money is wrong, data is lost, the system crashes, or documents are non-compliant — hitting many brokers across product lines with no workaround, often in front of clients.
 
 Reading the score: the probes ask about substance and consequences, not tone, so an
-understated report of a ledger-corrupting bug still scores 5/5. Adjacent scores mean
+understated report of a ledger-corrupting bug still scores 5/5. Known limit: reports of
+catastrophic data loss (databases destroyed) score 4, not 5 — escalate any claim of total
+or permanent data loss by human review regardless of band. Adjacent scores mean
 "roughly the same urgency" (within-one-band rate is 97%).
 
 ## Files
